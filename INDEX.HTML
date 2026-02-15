@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gajal Jain | Premium 3D Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,900&family=Inter:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cocoa-dark: #0F0906;
+            --cocoa-rich: #1A0F0A;
+            --caramel: #D2B48C;
+            --cream: #FAF9F6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cocoa-dark);
+            color: var(--cream);
+            margin: 0;
+            cursor: none; /* Custom cursor */
+            overflow-x: hidden;
+        }
+
+        .font-serif { font-family: 'Playfair Display', serif; }
+
+        /* Custom Cursor */
+        #cursor {
+            width: 20px;
+            height: 20px;
+            background: var(--caramel);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease;
+        }
+
+        #cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--caramel);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s ease, opacity 0.3s ease;
+        }
+
+        /* 3D Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        /* Shimmer Gold Text */
+        .text-gold {
+            background: linear-gradient(75deg, #8B7355 0%, #D2B48C 50%, #8B7355 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        /* Glassmorphism Refined */
+        .glass {
+            background: rgba(26, 15, 10, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(210, 180, 140, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass:hover {
+            border-color: rgba(210, 180, 140, 0.3);
+            background: rgba(26, 15, 10, 0.6);
+            transform: translateY(-10px) scale(1.02);
+        }
+
+        /* Scroll Progress */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--caramel);
+            z-index: 100;
+            width: 0%;
+        }
+
+        /* Floating Animation */
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hide cursor on small screens */
+        @media (max-width: 768px) {
+            #cursor, #cursor-follower { display: none; }
+            body { cursor: auto; }
+        }
+    </style>
+</head>
+<body class="selection:bg-[#D2B48C] selection:text-[#0F0906]">
+
+    <div id="progress-bar"></div>
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div id="canvas-container"></div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-[#0F0906] z-[60] flex flex-col items-center justify-center space-y-8 text-3xl font-serif translate-x-full transition-transform duration-500 md:hidden">
+        <a href="#about" class="mobile-link text-gold">About</a>
+        <a href="#experience" class="mobile-link">Experience</a>
+        <a href="#skills" class="mobile-link">Expertise</a>
+        <a href="#contact" class="mobile-link">Contact</a>
+        <button id="close-menu" class="absolute top-10 right-10"><i data-lucide="x" class="w-10 h-10"></i></button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 py-6 px-10 flex justify-between items-center transition-all duration-300" id="navbar">
+        <div class="flex flex-col group cursor-pointer">
+            <span class="text-3xl font-serif tracking-tighter text-gold italic leading-none">GJ</span>
+            <span class="text-[8px] tracking-[0.4em] uppercase opacity-50 mt-1">Gajal Jain</span>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-12">
+            <a href="#about" class="text-[10px] uppercase tracking-widest hover:text-[#D2B48C] transition-colors">Narration</a>
+            <a href="#experience" class="text-[10px] uppercase tracking-widest hover:text-[#D2B48C] transition-colors">Practice</a>
+            <a href="#skills" class="text-[10px] uppercase tracking-widest hover:text-[#D2B48C] transition-colors">Scholastic</a>
+            <a href="#contact" class="px-8 py-3 bg-[#D2B48C] text-[#0F0906] text-[10px] font-bold uppercase tracking-widest rounded-full hover:scale-105 transition-transform">Inquire</a>
+        </div>
+
+        <button class="md:hidden text-[#D2B48C]" id="open-menu">
+            <i data-lucide="menu" class="w-8 h-8"></i>
+        </button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="min-h-screen flex flex-col justify-center items-center px-6 relative overflow-hidden">
+        <div class="text-center z-10">
+            <div class="mb-8 floating">
+                <span class="px-6 py-2 rounded-full border border-[#D2B48C]/20 bg-black/40 backdrop-blur-md text-[#D2B48C] text-[10px] uppercase tracking-[0.5em]">
+                    Advocating with Excellence
+                </span>
+            </div>
+            <h1 class="text-8xl md:text-[12rem] font-serif font-black mb-4 tracking-tighter leading-none reveal active">
+                Gajal <span class="italic text-gold block md:inline">Jain</span>
+            </h1>
+            <p class="text-xl md:text-2xl font-light italic text-[#D2B48C]/60 mb-16 reveal active" style="transition-delay: 200ms;">
+                Law Student • Future Advocate • Intellectual Property Enthusiast
+            </p>
+            <div class="flex flex-col md:flex-row gap-6 justify-center reveal active" style="transition-delay: 400ms;">
+                <a href="#experience" class="group relative px-12 py-5 overflow-hidden rounded-full bg-white/5 border border-white/10 hover:border-[#D2B48C] transition-all">
+                    <span class="relative z-10 text-[10px] font-bold uppercase tracking-widest group-hover:text-[#D2B48C]">View Portfolio</span>
+                    <div class="absolute inset-0 bg-[#D2B48C] translate-y-full group-hover:translate-y-0 transition-transform duration-500 opacity-10"></div>
+                </a>
+                <a href="#contact" class="px-12 py-5 rounded-full bg-[#D2B48C] text-[#0F0906] text-[10px] font-bold uppercase tracking-widest hover:shadow-[0_0_30px_rgba(210,180,140,0.4)] transition-all">
+                    Direct Contact
+                </a>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-10 hidden md:block vertical-text reveal active">
+            <span class="text-[8px] uppercase tracking-[0.8em] opacity-30 origin-left -rotate-90 block">Scroll to explore</span>
+        </div>
+    </section>
+
+    <!-- Narrative -->
+    <section id="about" class="py-40 bg-gradient-to-b from-transparent to-black/40">
+        <div class="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-20 items-center">
+            <div class="reveal">
+                <div class="relative w-full aspect-square glass rounded-[3rem] overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-[#2D1B14] to-transparent opacity-60"></div>
+                    <div class="absolute inset-0 flex items-center justify-center p-12 text-center">
+                        <i data-lucide="scale" class="w-32 h-32 text-[#D2B48C]/20 absolute -top-10 -right-10 rotate-12"></i>
+                        <p class="text-2xl font-serif italic text-[#D2B48C]">"Justice is the constant and perpetual will to render to every man his due."</p>
+                    </div>
+                </div>
+            </div>
+            <div class="reveal" style="transition-delay: 200ms;">
+                <h2 class="text-gold text-xs uppercase tracking-[0.6em] mb-6">The Narrative</h2>
+                <h3 class="text-5xl font-serif mb-8 leading-tight">Analytical Rigor <br/>meets <span class="italic">Ethical Advocacy</span>.</h3>
+                <p class="text-lg font-light leading-relaxed text-white/60 mb-8">
+                    Currently pursuing a <span class="text-white font-medium">BA LLB (Hons) at Amity University Jaipur</span>, I bridge the gap between complex legal theory and practical resolution. My expertise spans across <span class="italic text-[#D2B48C]">Negotiation, Mediation, and Intellectual Property Law.</span>
+                </p>
+                <div class="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
+                    <div>
+                        <p class="text-3xl font-serif text-gold">2025</p>
+                        <p class="text-[9px] uppercase tracking-widest opacity-40">Candidate for Bar</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-serif text-gold">06+</p>
+                        <p class="text-[9px] uppercase tracking-widest opacity-40">Clinical Internships</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clinical Experience -->
+    <section id="experience" class="py-40">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-24 reveal">
+                <h2 class="text-gold text-xs uppercase tracking-[0.6em] mb-4">Practice</h2>
+                <h3 class="text-6xl font-serif italic">Professional Clinical Experience</h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Card 1 -->
+                <div class="glass p-12 rounded-[2.5rem] relative group reveal" style="transition-delay: 100ms;">
+                    <span class="absolute top-10 right-10 text-[10px] text-gold/40">01</span>
+                    <i data-lucide="briefcase" class="text-[#D2B48C] w-10 h-10 mb-12"></i>
+                    <h4 class="text-2xl font-serif mb-2">ASM Law Chambers</h4>
+                    <p class="text-gold text-[10px] uppercase tracking-widest mb-6">Legal Intern • Jaipur</p>
+                    <p class="text-sm font-light leading-relaxed opacity-50 mb-8">Specialized in drafting legal documents and conducting high-level case research for courtroom proceedings.</p>
+                    <p class="text-[9px] uppercase tracking-widest opacity-30">June 2024 — July 2024</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass p-12 rounded-[2.5rem] relative group reveal" style="transition-delay: 200ms;">
+                    <span class="absolute top-10 right-10 text-[10px] text-gold/40">02</span>
+                    <i data-lucide="shield-check" class="text-[#D2B48C] w-10 h-10 mb-12"></i>
+                    <h4 class="text-2xl font-serif mb-2">Assoc. of Indian Students</h4>
+                    <p class="text-gold text-[10px] uppercase tracking-widest mb-6">Legal Intern • Remote</p>
+                    <p class="text-sm font-light leading-relaxed opacity-50 mb-8">Policy analysis and student rights advocacy within a national framework.</p>
+                    <p class="text-[9px] uppercase tracking-widest opacity-30">July 2023</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass p-12 rounded-[2.5rem] relative group reveal" style="transition-delay: 300ms;">
+                    <span class="absolute top-10 right-10 text-[10px] text-gold/40">03</span>
+                    <i data-lucide="brain" class="text-[#D2B48C] w-10 h-10 mb-12"></i>
+                    <h4 class="text-2xl font-serif mb-2">Lex Maven Law Firm</h4>
+                    <p class="text-gold text-[10px] uppercase tracking-widest mb-6">Legal Intern • Indore</p>
+                    <p class="text-sm font-light leading-relaxed opacity-50 mb-8">Intensive research into European vs Indian Patent comparative analysis.</p>
+                    <p class="text-[9px] uppercase tracking-widest opacity-30">July 2022</p>
+                </div>
+            </div>
+
+            <!-- Smaller cards grid -->
+            <div class="mt-10 grid md:grid-cols-2 gap-10">
+                <div class="glass p-8 rounded-[2rem] flex items-center gap-8 reveal">
+                    <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                        <i data-lucide="landmark" class="text-[#D2B48C]"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-serif">Adv. Rajneesh Chittora & Assoc.</h4>
+                        <p class="text-xs text-[#D2B48C] uppercase tracking-widest">District Court • 2021-2022</p>
+                    </div>
+                </div>
+                <div class="glass p-8 rounded-[2rem] flex items-center gap-8 reveal" style="transition-delay: 100ms;">
+                    <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                        <i data-lucide="award" class="text-[#D2B48C]"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-serif">Think India & UniqueLaw</h4>
+                        <p class="text-xs text-[#D2B48C] uppercase tracking-widest">Summer Internship • 2021</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expertise -->
+    <section id="skills" class="py-40 bg-black/20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-32">
+                <div class="reveal">
+                    <h2 class="text-gold text-xs uppercase tracking-[0.6em] mb-12">Foundations</h2>
+                    <div class="space-y-16">
+                        <div class="group">
+                            <p class="text-xs text-gold uppercase tracking-widest mb-2">Primary Degree</p>
+                            <h3 class="text-4xl font-serif mb-2">BA LLB (Hons)</h3>
+                            <p class="text-white/40">Amity University Jaipur • 2020 — 2025</p>
+                        </div>
+                        <div class="group">
+                            <p class="text-xs text-gold uppercase tracking-widest mb-2">Secondary Education</p>
+                            <h3 class="text-2xl font-serif mb-2">Intermediate (Commerce)</h3>
+                            <p class="text-white/40">Carmel Convent School, Manasa • 2018 — 2020</p>
+                        </div>
+                        <div class="pt-10 border-t border-white/5">
+                            <h4 class="text-lg font-serif mb-6 flex items-center gap-3"><i data-lucide="globe" class="text-gold w-5 h-5"></i> Languages</h4>
+                            <div class="flex flex-wrap gap-4">
+                                <span class="px-6 py-2 glass rounded-full text-[10px] uppercase tracking-widest">English <span class="text-gold ml-2">●</span></span>
+                                <span class="px-6 py-2 glass rounded-full text-[10px] uppercase tracking-widest">Hindi <span class="text-gold ml-2">●</span></span>
+                                <span class="px-6 py-2 glass rounded-full text-[10px] uppercase tracking-widest">Spanish <span class="opacity-40 ml-2">○</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal" style="transition-delay: 200ms;">
+                    <h2 class="text-gold text-xs uppercase tracking-[0.6em] mb-12">Scholastic Honors</h2>
+                    <div class="glass p-12 rounded-[3rem] space-y-8">
+                        <div class="flex items-start gap-6">
+                            <div class="p-4 bg-[#D2B48C]/10 rounded-2xl"><i data-lucide="medal" class="text-gold"></i></div>
+                            <div>
+                                <h4 class="text-lg font-bold">1st Intra Mediation Competition</h4>
+                                <p class="text-sm opacity-40">2022 • Excellence in Conflict Resolution</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-6">
+                            <div class="p-4 bg-[#D2B48C]/10 rounded-2xl"><i data-lucide="gavel" class="text-gold"></i></div>
+                            <div>
+                                <h4 class="text-lg font-bold">IV GDGU Int. Law & Tech Moot Court</h4>
+                                <p class="text-sm opacity-40">2024 • Tech & Law Integration</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-6">
+                            <div class="p-4 bg-[#D2B48C]/10 rounded-2xl"><i data-lucide="edit-3" class="text-gold"></i></div>
+                            <div>
+                                <h4 class="text-lg font-bold">International Essay Competition</h4>
+                                <p class="text-sm opacity-40">2024 • Legal Scholarship Award</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-8 border-t border-white/5">
+                            <p class="text-xs uppercase tracking-widest text-gold mb-6">Core Competencies</p>
+                            <div class="flex flex-wrap gap-3">
+                                <span class="px-4 py-2 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest">Negotiation</span>
+                                <span class="px-4 py-2 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest">Legal Research</span>
+                                <span class="px-4 py-2 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest">Microsoft Excel</span>
+                                <span class="px-4 py-2 bg-white/5 rounded-lg text-[10px] font-bold uppercase tracking-widest">Analytical Writing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="py-40 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-32 items-center">
+                <div class="reveal">
+                    <h2 class="text-gold text-xs uppercase tracking-[0.6em] mb-12">Contact</h2>
+                    <h3 class="text-7xl font-serif mb-12">Initiate a <br/><span class="text-gold italic">Dialogue.</span></h3>
+                    
+                    <div class="space-y-12">
+                        <div class="group cursor-pointer">
+                            <p class="text-[9px] uppercase tracking-widest opacity-40 mb-2">Electronic Mail</p>
+                            <a href="mailto:renukajain506@gmail.com" class="text-3xl font-serif hover:text-gold transition-colors">renukajain506@gmail.com</a>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <p class="text-[9px] uppercase tracking-widest opacity-40 mb-2">LinkedIn Professional</p>
+                            <a href="https://www.linkedin.com/in/gajal-jain-2798b91a5" target="_blank" class="text-3xl font-serif hover:text-gold transition-colors">Gajal Jain</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-12 md:p-20 rounded-[4rem] reveal" style="transition-delay: 200ms;">
+                    <form class="space-y-8" onsubmit="handleContact(event)">
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="space-y-2">
+                                <label class="text-[9px] uppercase tracking-widest opacity-40 ml-4">Name</label>
+                                <input type="text" placeholder="Gajal Jain" class="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-5 focus:border-gold outline-none transition-all">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[9px] uppercase tracking-widest opacity-40 ml-4">Email</label>
+                                <input type="email" placeholder="example@law.com" class="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-5 focus:border-gold outline-none transition-all">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] uppercase tracking-widest opacity-40 ml-4">Inquiry Details</label>
+                            <textarea rows="4" placeholder="How may I assist you with legal research or advocacy?" class="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-5 focus:border-gold outline-none transition-all resize-none"></textarea>
+                        </div>
+                        <button class="w-full py-6 bg-[#D2B48C] text-[#0F0906] font-black uppercase tracking-[0.5em] text-[10px] rounded-3xl hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            Send Message
+                        </button>
+                        <p id="formStatus" class="hidden text-center text-gold text-xs italic">Inquiry received. Expected response within 24 hours.</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-20 border-t border-white/5 text-center relative">
+        <div class="reveal">
+            <h2 class="text-4xl font-serif text-gold mb-12">GJ</h2>
+            <div class="flex justify-center space-x-8 mb-12">
+                <a href="#" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">Instagram</a>
+                <a href="https://www.linkedin.com/in/gajal-jain-2798b91a5" target="_blank" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">LinkedIn</a>
+                <a href="#" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">Twitter</a>
+            </div>
+            <p class="text-[8px] tracking-[0.8em] uppercase opacity-20 mb-8">© 2025 GAJAL JAIN • INTEGRITY IN EVERY CASE</p>
+            <div class="h-px w-20 bg-gold/30 mx-auto mb-8"></div>
+            <p class="text-[10px] font-serif italic text-white/30">Designed & Crafted by <span class="text-white not-italic font-sans font-black">Naman Jain</span></p>
+        </div>
+    </footer>
+
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`;
+            follower.style.transform = `translate(${e.clientX - 20}px, ${e.clientY - 20}px)`;
+        });
+
+        // 3D Background System
+        let scene, camera, renderer, particles;
+        const particleCount = 2000;
+
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Particles (Gold Dust)
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(particleCount * 3);
+            for(let i=0; i < particleCount * 3; i++) {
+                pos[i] = (Math.random() - 0.5) * 50;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+            const mat = new THREE.PointsMaterial({
+                size: 0.05,
+                color: 0xD2B48C,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(geo, mat);
+            scene.add(particles);
+
+            // Floating Chocolate Cubes (Subtle)
+            const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0x1A0F0A, roughness: 0.2 });
+            for(let i=0; i<15; i++) {
+                const cube = new THREE.Mesh(boxGeo, boxMat);
+                cube.position.set((Math.random()-0.5)*30, (Math.random()-0.5)*30, (Math.random()-0.5)*20);
+                cube.rotation.set(Math.random(), Math.random(), 0);
+                cube.scale.setScalar(Math.random() * 0.5 + 0.1);
+                scene.add(cube);
+            }
+
+            const light = new THREE.PointLight(0xD2B48C, 1, 100);
+            light.position.set(10, 10, 10);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+            camera.position.z = 15;
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.y += 0.0005;
+            particles.rotation.x += 0.0002;
+            
+            const scrollY = window.scrollY;
+            camera.position.y = -scrollY * 0.002;
+            camera.lookAt(0, -scrollY * 0.002, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        // Scroll Progress & Reveal
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+
+            // Reveal
+            const reveals = document.querySelectorAll(".reveal");
+            reveals.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < window.innerHeight - 100) el.classList.add("active");
+            });
+
+            // Navbar Blur
+            const nav = document.getElementById('navbar');
+            if(window.scrollY > 50) nav.classList.add('bg-[#0F0906]/80', 'backdrop-blur-xl');
+            else nav.classList.remove('bg-[#0F0906]/80', 'backdrop-blur-xl');
+        });
+
+        // Mobile Menu Logic
+        const openBtn = document.getElementById('open-menu');
+        const closeBtn = document.getElementById('close-menu');
+        const overlay = document.getElementById('mobile-overlay');
+        const links = document.querySelectorAll('.mobile-link');
+
+        openBtn.onclick = () => overlay.style.transform = 'translateX(0)';
+        closeBtn.onclick = () => overlay.style.transform = 'translateX(100%)';
+        links.forEach(l => l.onclick = () => overlay.style.transform = 'translateX(100%)');
+
+        function handleContact(e) {
+            e.preventDefault();
+            const status = document.getElementById('formStatus');
+            status.classList.remove('hidden');
+            e.target.reset();
+            setTimeout(() => status.classList.add('hidden'), 5000);
+        }
+
+        window.onload = () => {
+            init3D();
+            // Trigger initial reveals
+            window.dispatchEvent(new Event('scroll'));
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
